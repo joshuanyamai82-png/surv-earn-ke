@@ -66,25 +66,34 @@
     import { requireAuth } from './shared/auth.js';
     import { MIN_WITHDRAWAL, ACTIVATION_FEE } from './shared/config.js';
 
-    const user = requireAuth('login.html');
-    if (user) {
-      renderShell({ activePage: 'help', title: 'Help Center', subtitle: 'Find answers or contact support' });
-      updateShellUser(user);
-      renderFAQs();
-      initCategories();
-    }
+    /* ============================================================
+       DATA FIRST
+       ============================================================ */
 
     const faqData = [
-      { category:'getting-started', question:'How do I start taking surveys?', answer:'Log in and go to the Surveys page. Click "Take Survey" on any available survey and follow the instructions. Earnings are added automatically upon completion.' },
-      { category:'getting-started', question:'What are the requirements to join SurveyEarn?', answer:'Anyone aged 18+ with a valid email address can join. Registration is free and takes less than 2 minutes.' },
-      { category:'earnings', question:'How much can I earn per survey?', answer:'Survey rewards vary. Free surveys offer up to Ksh 3,360, standard surveys up to Ksh 5,310, and premium surveys up to Ksh 7,080 per survey.' },
-      { category:'payments', question:'When and how can I withdraw my earnings?', answer:`Minimum withdrawal is Ksh ${MIN_WITHDRAWAL}. One-time activation fee of Ksh ${ACTIVATION_FEE} applies to your first withdrawal. Payments are processed within 24-48 hours via M-Pesa.` },
-      { category:'survey-taking', question:'Why is there a delay between questions?', answer:'A short delay is used to prevent random clicking and ensure thoughtful responses. It helps maintain data quality.' },
-      { category:'technical', question:'What happens if I lose internet connection during a survey?', answer:'If you reconnect within a few minutes, you may be able to resume. Otherwise, the survey may be lost. Use a stable connection before starting.' },
-      { category:'account', question:'How do I update my profile information?', answer:'Go to Settings and edit your details. Keep your profile complete to receive relevant surveys.' },
-      { category:'account', question:'Can I have multiple accounts?', answer:'No, each user is allowed only one account. Duplicate accounts may result in suspension.' },
-      { category:'referrals', question:'How does the referral program work?', answer:'Share your unique referral code. When a friend signs up and completes their first survey, you both earn Ksh 200.' }
+      { category:'getting-started', question:'How do I start taking surveys?',
+        answer:'Log in and go to the Surveys page. Click "Take Survey" on any available survey and follow the instructions. Earnings are added automatically upon completion.' },
+      { category:'getting-started', question:'What are the requirements to join SurveyEarn?',
+        answer:'Anyone aged 18+ with a valid email address can join. Registration is free and takes less than 2 minutes.' },
+      { category:'earnings', question:'How much can I earn per survey?',
+        answer:'Survey rewards vary. Free surveys offer up to Ksh 3,360, standard surveys up to Ksh 5,310, and premium surveys up to Ksh 7,080 per survey.' },
+      { category:'payments', question:'When and how can I withdraw my earnings?',
+        answer:`Minimum withdrawal is Ksh ${MIN_WITHDRAWAL}. One-time activation fee of Ksh ${ACTIVATION_FEE} applies to your first withdrawal. Payments are processed within 24-48 hours via M-Pesa.` },
+      { category:'survey-taking', question:'Why is there a delay between questions?',
+        answer:'A short delay is used to prevent random clicking and ensure thoughtful responses. It helps maintain data quality.' },
+      { category:'technical', question:'What happens if I lose internet connection during a survey?',
+        answer:'If you reconnect within a few minutes, you may be able to resume. Otherwise, the survey may be lost. Use a stable connection before starting.' },
+      { category:'account', question:'How do I update my profile information?',
+        answer:'Go to Settings and edit your details. Keep your profile complete to receive relevant surveys.' },
+      { category:'account', question:'Can I have multiple accounts?',
+        answer:'No, each user is allowed only one account. Duplicate accounts may result in suspension.' },
+      { category:'referrals', question:'How does the referral program work?',
+        answer:'Share your unique referral code. When a friend signs up and completes their first survey, you both earn Ksh 200.' }
     ];
+
+    /* ============================================================
+       RENDERING
+       ============================================================ */
 
     function renderFAQs(category = 'all', searchTerm = '') {
       const c = document.getElementById('faqList');
@@ -99,7 +108,10 @@
         return;
       }
       c.innerHTML = items.map(f => `
-        <div class="faq-item"><div class="faq-question">${f.question}<i class="fas fa-chevron-down"></i></div><div class="faq-answer">${f.answer}</div></div>`).join('');
+        <div class="faq-item">
+          <div class="faq-question">${f.question}<i class="fas fa-chevron-down"></i></div>
+          <div class="faq-answer">${f.answer}</div>
+        </div>`).join('');
       c.querySelectorAll('.faq-item').forEach(el => {
         el.querySelector('.faq-question').addEventListener('click', () => el.classList.toggle('active'));
       });
@@ -115,6 +127,10 @@
       });
     }
 
+    /* ============================================================
+       EVENT LISTENERS
+       ============================================================ */
+
     document.getElementById('searchInput').addEventListener('input', e => {
       const cat = document.querySelector('.category.active').getAttribute('data-category');
       renderFAQs(cat, e.target.value);
@@ -123,6 +139,18 @@
     document.getElementById('contactSupportBtn').addEventListener('click', () => {
       showToast('Support request sent! We will get back to you within 24 hours.', 4000);
     });
+
+    /* ============================================================
+       INIT — MUST run at the bottom, after faqData is declared.
+       ============================================================ */
+
+    const user = requireAuth('login.html');
+    if (user) {
+      renderShell({ activePage: 'help', title: 'Help Center', subtitle: 'Find answers or contact support' });
+      updateShellUser(user);
+      renderFAQs();
+      initCategories();
+    }
   </script>
 </body>
 </html>

@@ -84,15 +84,10 @@
     import { showSubscriptionModal, showUpgradeModal } from './shared/subscription.js';
     import { getPlanLevel } from './shared/config.js';
 
-    const user = requireAuth('login.html');
-    if (user) {
-      renderShell({ activePage: 'surveys', title: 'Available Surveys', subtitle: 'Complete surveys and earn rewards' });
-      updateShellUser(user);
-      renderSurveys();
-      bindFilters();
-    }
+    /* ============================================================
+       DATA FIRST — declarations before any code that uses them.
+       ============================================================ */
 
-    /* ---------- Survey catalogue ---------- */
     function generateQuestions() {
       const base = [
         { text: "How satisfied are you with this brand?", options: ["Very satisfied","Satisfied","Neutral","Dissatisfied"] },
@@ -106,29 +101,42 @@
     }
 
     const freeSurvey = { id: 'surveysplus', title: 'SurveysPlus', reward: 3360, requiredPlan: 'free', questions: generateQuestions(), time: '11 mins' };
+
     const standardSurveys = [
-      { id:'safaricom', title:'Safaricom M-PESA', reward:3675, requiredPlan:'standard', time:'11 mins' },
-      { id:'market_research', title:'Market Research', reward:4047, requiredPlan:'standard', time:'13 mins' },
-      { id:'equity', title:'Equity Bank', reward:4800, requiredPlan:'standard', time:'9 mins' },
-      { id:'kcb', title:'KCB Bank', reward:5154, requiredPlan:'standard', time:'10 mins' },
-      { id:'coop_bank', title:'Cooperative Bank', reward:4620, requiredPlan:'standard', time:'8 mins' },
-      { id:'airtel', title:'Airtel Kenya', reward:4080, requiredPlan:'standard', time:'10 mins' },
-      { id:'telkom', title:'Telkom Kenya', reward:4605, requiredPlan:'standard', time:'9 mins' },
-      { id:'ncba', title:'NCBA Bank', reward:5310, requiredPlan:'standard', time:'11 mins' },
-      { id:'imbank', title:'I&M Bank', reward:5175, requiredPlan:'standard', time:'8 mins' },
-      { id:'family_bank', title:'Family Bank', reward:4470, requiredPlan:'standard', time:'7 mins' },
-      { id:'dtb', title:'DTB Kenya', reward:4980, requiredPlan:'standard', time:'10 mins' },
-      { id:'postbank', title:'Postbank Kenya', reward:4935, requiredPlan:'standard', time:'9 mins' }
+      { id:'safaricom',       title:'Safaricom M-PESA',  reward:3675, requiredPlan:'standard', time:'11 mins' },
+      { id:'market_research', title:'Market Research',   reward:4047, requiredPlan:'standard', time:'13 mins' },
+      { id:'equity',          title:'Equity Bank',       reward:4800, requiredPlan:'standard', time:'9 mins'  },
+      { id:'kcb',             title:'KCB Bank',          reward:5154, requiredPlan:'standard', time:'10 mins' },
+      { id:'coop_bank',       title:'Cooperative Bank',  reward:4620, requiredPlan:'standard', time:'8 mins'  },
+      { id:'airtel',          title:'Airtel Kenya',      reward:4080, requiredPlan:'standard', time:'10 mins' },
+      { id:'telkom',          title:'Telkom Kenya',      reward:4605, requiredPlan:'standard', time:'9 mins'  },
+      { id:'ncba',            title:'NCBA Bank',         reward:5310, requiredPlan:'standard', time:'11 mins' },
+      { id:'imbank',          title:'I&M Bank',          reward:5175, requiredPlan:'standard', time:'8 mins'  },
+      { id:'family_bank',     title:'Family Bank',       reward:4470, requiredPlan:'standard', time:'7 mins'  },
+      { id:'dtb',             title:'DTB Kenya',         reward:4980, requiredPlan:'standard', time:'10 mins' },
+      { id:'postbank',        title:'Postbank Kenya',    reward:4935, requiredPlan:'standard', time:'9 mins'  }
     ].map(s => ({ ...s, questions: generateQuestions() }));
+
     const premiumSurveys = [
-      { id:'kenya_airways', title:'Kenya Airways', reward:5850, requiredPlan:'premium', time:'12 mins' },
-      { id:'jumia', title:'Jumia Kenya', reward:6060, requiredPlan:'premium', time:'10 mins' },
-      { id:'java_house', title:'Java House', reward:6630, requiredPlan:'premium', time:'8 mins' },
-      { id:'kplc', title:'KPLC', reward:6348, requiredPlan:'premium', time:'9 mins' },
-      { id:'village_market', title:'Village Market', reward:6810, requiredPlan:'premium', time:'11 mins' },
-      { id:'two_rivers', title:'Two Rivers Mall', reward:7080, requiredPlan:'premium', time:'10 mins' }
+      { id:'kenya_airways',  title:'Kenya Airways',    reward:5850, requiredPlan:'premium', time:'12 mins' },
+      { id:'jumia',          title:'Jumia Kenya',      reward:6060, requiredPlan:'premium', time:'10 mins' },
+      { id:'java_house',     title:'Java House',       reward:6630, requiredPlan:'premium', time:'8 mins'  },
+      { id:'kplc',           title:'KPLC',             reward:6348, requiredPlan:'premium', time:'9 mins'  },
+      { id:'village_market', title:'Village Market',   reward:6810, requiredPlan:'premium', time:'11 mins' },
+      { id:'two_rivers',     title:'Two Rivers Mall',  reward:7080, requiredPlan:'premium', time:'10 mins' }
     ].map(s => ({ ...s, questions: generateQuestions() }));
+
     const surveys = [freeSurvey, ...standardSurveys, ...premiumSurveys];
+
+    /* Module-scope state for the survey-taking flow */
+    let currentSurvey = null;
+    let currentQIndex = 0;
+    let surveyAnswers = [];
+    let surveyTimer = null;
+
+    /* ============================================================
+       HELPERS
+       ============================================================ */
 
     function getUpgradeOffer(user, targetTier) {
       const current = user.subscription ? user.subscription.plan : null;
@@ -141,7 +149,10 @@
       return null;
     }
 
-    /* ---------- Rendering ---------- */
+    /* ============================================================
+       RENDERING
+       ============================================================ */
+
     function renderSurveys() {
       const u = requireAuth('login.html');
       const grid = document.getElementById('surveysGrid');
@@ -190,7 +201,7 @@
         }
         return showSubscriptionModal({
           requiredPlan: 'standard', surveyId: survey.id,
-          onSuccess: () => startSurvey(survey),
+          onSuccess: () => startSurvey(survey)
         });
       }
 
@@ -204,13 +215,14 @@
         }
         return showSubscriptionModal({
           requiredPlan: 'premium', surveyId: survey.id,
-          onSuccess: () => startSurvey(survey),
+          onSuccess: () => startSurvey(survey)
         });
       }
     }
 
-    /* ---------- Survey taking ---------- */
-    let currentSurvey = null, currentQIndex = 0, surveyAnswers = [], surveyTimer = null;
+    /* ============================================================
+       SURVEY TAKING FLOW
+       ============================================================ */
 
     function startSurvey(survey) {
       currentSurvey = survey;
@@ -277,7 +289,7 @@
         Swal.fire({
           title: '🎉 Survey Completed!',
           html: `<div style="text-align:center"><i class="fas fa-check-circle" style="font-size:3rem;color:#10b981;margin-bottom:12px"></i><h3 style="margin:8px 0">You earned Ksh ${reward}!</h3><p>Thank you for sharing your feedback.</p></div>`,
-          confirmButtonText: 'OK', confirmButtonColor: '#4f46e5', allowOutsideClick: false,
+          confirmButtonText: 'OK', confirmButtonColor: '#4f46e5', allowOutsideClick: false
         });
       } else {
         closeModal('surveyModal');
@@ -285,7 +297,10 @@
       }
     }
 
-    /* ---------- Filters ---------- */
+    /* ============================================================
+       FILTERS
+       ============================================================ */
+
     function bindFilters() {
       document.querySelectorAll('.filter').forEach(f => {
         f.addEventListener('click', () => {
@@ -298,6 +313,20 @@
           });
         });
       });
+    }
+
+    /* ============================================================
+       INIT — MUST run at the bottom, after all consts above are
+       initialized. Otherwise TDZ error: "Cannot access 'surveys'
+       before initialization".
+       ============================================================ */
+
+    const user = requireAuth('login.html');
+    if (user) {
+      renderShell({ activePage: 'surveys', title: 'Available Surveys', subtitle: 'Complete surveys and earn rewards' });
+      updateShellUser(user);
+      renderSurveys();
+      bindFilters();
     }
   </script>
 </body>
