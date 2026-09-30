@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>SurveyEarn - Earn from surveys</title>
+
+    <!-- Favicons (adjust paths if needed) -->
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/icon.192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon.512.png">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4f46e5;       /* SurveyEarn gradient start */
+            --primary-dark: #3a2ca3;
+            --secondary: #f97316;      /* gradient end */
+            --background: #f4f6fa;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 24px rgba(79, 70, 229, 0.15);
+            --border-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--background) 0%, #eef2ff 100%);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            padding: 16px 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+            flex: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-bg);
+            padding: 12px 24px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .logo i {
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo span {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .tagline {
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 8px;
+            background: rgba(79, 70, 229, 0.08);
+            padding: 6px 16px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+
+        /* Main Card */
+        .main-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 32px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(79, 70, 229, 0.1);
+        }
+
+        .main-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .earning-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .earning-range {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 12px 0;
+            position: relative;
+            display: inline-block;
+        }
+
+        .subtext {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin: 20px 0 28px;
+            line-height: 1.5;
+        }
+
+        /* Features Grid */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .feature {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(249, 115, 22, 0.05));
+            border-radius: 14px;
+            padding: 16px 8px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(79, 70, 229, 0.1);
+            transition: all 0.2s;
+        }
+
+        .feature i {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            display: block;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* CTA Button */
+        .btn-start {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 24px 0 16px;
+        }
+
+        .btn-start:active {
+            transform: scale(0.98);
+        }
+
+        /* Trust Section */
+        .trust-section {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-top: 8px;
+        }
+
+        .trust-title {
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .trust-title::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 30%;
+            right: 30%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .trust-badges {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .trust-badge {
+            background: rgba(79, 70, 229, 0.05);
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .trust-badge i {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .trust-note {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            padding: 16px 0;
+            color: var(--text-light);
+            font-size: 0.75rem;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 16px;
+            backdrop-filter: blur(3px);
+        }
+
+        .loading-popup {
+            background: white;
+            border-radius: 20px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 280px;
+            width: 100%;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(79, 70, 229, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .loading-subtext {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 360px) {
+            .main-card { padding: 24px 20px; }
+            .earning-range { font-size: 1.8rem; }
+            .feature { padding: 12px 6px; font-size: 0.75rem; }
+            .trust-badge { padding: 10px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-clipboard-list"></i>
+                <span>SurveyEarn</span>
+            </div>
+            <p class="tagline">Earn real money by sharing your opinions</p>
+        </header>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-popup">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Getting you ready...</p>
+                <p class="loading-subtext">Please wait while we prepare your account</p>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="main-card">
+            <div class="earning-label">Earn up to</div>
+            <div class="earning-range">Ksh 10,000 / day</div>
+            <p class="subtext">Complete interesting surveys and get paid instantly via M‑Pesa. No hidden fees.</p>
+
+            <div class="features">
+                <div class="feature">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>M‑Pesa Payouts</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-clock"></i>
+                    <span>Fast Reviews</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>100% Secure</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-users"></i>
+                    <span>Trusted by 10K+</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Button -->
+        <button class="btn-start" id="getStartedBtn">
+            Get Started <i class="fas fa-arrow-right"></i>
+        </button>
+
+        <!-- Trust Section -->
+        <div class="trust-section">
+            <h3 class="trust-title">Your Security & Trust</h3>
+            <div class="trust-badges">
+                <div class="trust-badge"><i class="fas fa-lock"></i> SSL Secured</div>
+                <div class="trust-badge"><i class="fas fa-certificate"></i> Licensed</div>
+                <div class="trust-badge"><i class="fas fa-shield-alt"></i> Data Protected</div>
+                <div class="trust-badge"><i class="fas fa-gem"></i> No Data Shared</div>
+            </div>
+            <p class="trust-note">Empowering thousands of Kenyans since 2023</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; 2025 SurveyEarn. All rights reserved.</p>
+            <p><a href="mailto:support@surveyearn.com" style="color: var(--primary); text-decoration: none;">Contact Support</a></p>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('getStartedBtn').addEventListener('click', () => {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
+
+            // 2-second delay before redirecting to signup
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                window.location.href = 'signup.html';
+            }, 2000);
+        });
+
+        // Hide overlay if user comes back to this page (e.g., back button)
+        window.addEventListener('pageshow', () => {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.style.display = 'none';
+        });
+    </script>
+
+</body>
+
+</html>

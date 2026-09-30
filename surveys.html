@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>SurveyEarn - Surveys</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  .filter-tabs { display:flex; gap:12px; margin-bottom:32px; flex-wrap:wrap; }
+  .filter { padding:8px 24px; background:#fff; border-radius:40px; font-size:14px; font-weight:500; cursor:pointer; transition:.2s; border:1px solid #eef2f6; }
+  .filter.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+  .surveys-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .survey-card { background:#fff; border-radius:24px; padding:20px; transition:transform .2s, box-shadow .2s; box-shadow:0 2px 8px rgba(0,0,0,0.04); border:1px solid #eef2f6; }
+  .survey-card:hover { transform:translateY(-4px); box-shadow:0 20px 25px -12px rgba(0,0,0,0.1); }
+  .survey-card.completed { opacity:.7; background:#f9fafb; border-color:#e5e7eb; }
+  .survey-card.completed .btn-take { background:#9ca3af; cursor:not-allowed; pointer-events:none; }
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+  .card-icon { width:48px; height:48px; background:linear-gradient(135deg,#eef2ff,#fff); border-radius:16px; display:flex; align-items:center; justify-content:center; color:#4f46e5; font-size:24px; border:1px solid #eef2f6; }
+  .badge { font-size:12px; font-weight:600; padding:4px 10px; border-radius:20px; background:#f3f4f6; color:#4b5563; }
+  .badge.free { background:#e0f2fe; color:#0284c7; }
+  .badge.standard { background:#fef3c7; color:#d97706; }
+  .badge.premium { background:#f1e5ff; color:#7c3aed; }
+  .survey-title { font-size:18px; font-weight:600; margin-bottom:8px; color:#1f2937; }
+  .survey-meta { font-size:13px; color:#6b7280; margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap; }
+  .reward { font-size:24px; font-weight:700; color:#1f2937; margin:16px 0; }
+  .btn-take { background:linear-gradient(135deg,#4f46e5,#f97316); border:none; padding:12px; border-radius:12px; color:#fff; font-weight:600; width:100%; cursor:pointer; transition:.2s; font-size:14px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-take:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(79,70,229,0.3); }
+  .btn-take.disabled { background:#d1d5db; cursor:not-allowed; }
+  .survey-time { font-size:12px; color:#9ca3af; margin-top:16px; display:flex; align-items:center; gap:6px; }
+  .modal-container { max-width:800px; }
+  .survey-question { margin-bottom:32px; }
+  .question-text { font-weight:600; margin-bottom:16px; color:#1f2937; font-size:1.1rem; }
+  .options { display:flex; flex-direction:column; gap:12px; }
+  .option { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; background:#f9fafb; cursor:pointer; transition:.2s; border:1px solid #eef2f6; }
+  .option:hover { background:#f3f4f6; border-color:#4f46e5; }
+  .option input { margin:0; width:18px; height:18px; cursor:pointer; }
+  .option span { flex:1; font-size:.95rem; }
+  @media (max-width:768px) {
+    .surveys-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
+    .filter-tabs { gap:8px; }
+    .filter { padding:6px 16px; font-size:12px; }
+  }
+  @media (max-width:640px) { .surveys-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+  <div class="sidebar" id="shellSidebar"></div>
+  <div class="main">
+    <div class="topbar" id="shellTopbar"></div>
+    <div class="content">
+      <div id="shellMobileBalance"></div>
+
+      <div class="filter-tabs">
+        <div class="filter active" data-filter="all">All Surveys</div>
+        <div class="filter" data-filter="free">Free</div>
+        <div class="filter" data-filter="standard">Standard</div>
+        <div class="filter" data-filter="premium">Premium</div>
+      </div>
+      <div class="surveys-grid" id="surveysGrid"></div>
+    </div>
+  </div>
+  <div class="bottom-nav" id="shellBottomNav"></div>
+  <div id="shellModals"></div>
+  <div id="toast" class="toast"></div>
+
+  <div id="surveyModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Take Survey</h3>
+        <button class="close-modal" data-close="surveyModal">&times;</button>
+      </div>
+      <div class="modal-body" id="surveyQuestionsContainer"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+  <script type="module">
+    import { renderShell, showToast, closeModal, openModal, updateShellUser } from './shared/ui.js';
+    import { requireAuth, updateUser } from './shared/auth.js';
+    import { handleWithdrawClick } from './shared/withdrawal.js';
+    import { showSubscriptionModal, showUpgradeModal } from './shared/subscription.js';
+    import { getPlanLevel } from './shared/config.js';
+
+    const user = requireAuth('login.html');
+    if (user) {
+      renderShell({ activePage: 'surveys', title: 'Available Surveys', subtitle: 'Complete surveys and earn rewards' });
+      updateShellUser(user);
+      renderSurveys();
+      bindFilters();
+    }
+
+    /* ---------- Survey catalogue ---------- */
+    function generateQuestions() {
+      const base = [
+        { text: "How satisfied are you with this brand?", options: ["Very satisfied","Satisfied","Neutral","Dissatisfied"] },
+        { text: "How often do you use their services?", options: ["Daily","Weekly","Monthly","Rarely"] },
+        { text: "Would you recommend them to a friend?", options: ["Definitely","Probably","Not sure","No"] },
+        { text: "What could they improve?", options: ["Customer service","Pricing","Product quality","Availability"] },
+        { text: "How likely are you to use them again?", options: ["Very likely","Likely","Unlikely","Never"] }
+      ];
+      const num = Math.floor(Math.random() * 3) + 3;
+      return base.slice(0, num);
+    }
+
+    const freeSurvey = { id: 'surveysplus', title: 'SurveysPlus', reward: 3360, requiredPlan: 'free', questions: generateQuestions(), time: '11 mins' };
+    const standardSurveys = [
+      { id:'safaricom', title:'Safaricom M-PESA', reward:3675, requiredPlan:'standard', time:'11 mins' },
+      { id:'market_research', title:'Market Research', reward:4047, requiredPlan:'standard', time:'13 mins' },
+      { id:'equity', title:'Equity Bank', reward:4800, requiredPlan:'standard', time:'9 mins' },
+      { id:'kcb', title:'KCB Bank', reward:5154, requiredPlan:'standard', time:'10 mins' },
+      { id:'coop_bank', title:'Cooperative Bank', reward:4620, requiredPlan:'standard', time:'8 mins' },
+      { id:'airtel', title:'Airtel Kenya', reward:4080, requiredPlan:'standard', time:'10 mins' },
+      { id:'telkom', title:'Telkom Kenya', reward:4605, requiredPlan:'standard', time:'9 mins' },
+      { id:'ncba', title:'NCBA Bank', reward:5310, requiredPlan:'standard', time:'11 mins' },
+      { id:'imbank', title:'I&M Bank', reward:5175, requiredPlan:'standard', time:'8 mins' },
+      { id:'family_bank', title:'Family Bank', reward:4470, requiredPlan:'standard', time:'7 mins' },
+      { id:'dtb', title:'DTB Kenya', reward:4980, requiredPlan:'standard', time:'10 mins' },
+      { id:'postbank', title:'Postbank Kenya', reward:4935, requiredPlan:'standard', time:'9 mins' }
+    ].map(s => ({ ...s, questions: generateQuestions() }));
+    const premiumSurveys = [
+      { id:'kenya_airways', title:'Kenya Airways', reward:5850, requiredPlan:'premium', time:'12 mins' },
+      { id:'jumia', title:'Jumia Kenya', reward:6060, requiredPlan:'premium', time:'10 mins' },
+      { id:'java_house', title:'Java House', reward:6630, requiredPlan:'premium', time:'8 mins' },
+      { id:'kplc', title:'KPLC', reward:6348, requiredPlan:'premium', time:'9 mins' },
+      { id:'village_market', title:'Village Market', reward:6810, requiredPlan:'premium', time:'11 mins' },
+      { id:'two_rivers', title:'Two Rivers Mall', reward:7080, requiredPlan:'premium', time:'10 mins' }
+    ].map(s => ({ ...s, questions: generateQuestions() }));
+    const surveys = [freeSurvey, ...standardSurveys, ...premiumSurveys];
+
+    function getUpgradeOffer(user, targetTier) {
+      const current = user.subscription ? user.subscription.plan : null;
+      if (targetTier === 'standard' && current === 'Standard') {
+        return { fromPlan: 'Standard', toPlan: 'Standard Plus', price: 120 };
+      }
+      if (targetTier === 'premium' && current === 'Premium') {
+        return { fromPlan: 'Premium', toPlan: 'Premium Plus', price: 240 };
+      }
+      return null;
+    }
+
+    /* ---------- Rendering ---------- */
+    function renderSurveys() {
+      const u = requireAuth('login.html');
+      const grid = document.getElementById('surveysGrid');
+      grid.innerHTML = surveys.map(s => {
+        const completed = u.completedSurveys && u.completedSurveys.includes(s.id);
+        const badgeClass = s.requiredPlan === 'free' ? 'free' : (s.requiredPlan === 'standard' ? 'standard' : 'premium');
+        const badgeText  = s.requiredPlan === 'free' ? 'Free' : (s.requiredPlan === 'standard' ? 'Standard' : 'Premium');
+        return `
+          <div class="survey-card ${completed ? 'completed' : ''}" data-id="${s.id}">
+            <div class="card-header">
+              <div class="card-icon"><i class="fas ${s.requiredPlan === 'free' ? 'fa-file-alt' : 'fa-star'}"></i></div>
+              <div class="badge ${badgeClass}">${badgeText}</div>
+            </div>
+            <div class="survey-title">${s.title}</div>
+            <div class="survey-meta">${s.questions.length} questions</div>
+            <div class="reward">Reward Ksh ${s.reward}</div>
+            <button class="btn-take ${completed ? 'disabled' : ''}" data-id="${s.id}" ${completed ? 'disabled' : ''}>${completed ? 'Completed' : 'Take Survey'}</button>
+            <div class="survey-time"><i class="far fa-clock"></i> ${s.time}</div>
+          </div>`;
+      }).join('');
+
+      document.querySelectorAll('.btn-take').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const survey = surveys.find(s => s.id === btn.getAttribute('data-id'));
+          if (survey) handleTakeClick(survey);
+        });
+      });
+    }
+
+    function handleTakeClick(survey) {
+      const u = requireAuth('login.html');
+      if (u.completedSurveys.includes(survey.id)) { showToast('You have already completed this survey'); return; }
+
+      const userLevel = getPlanLevel(u.subscription ? u.subscription.plan : null);
+
+      if (survey.requiredPlan === 'free') return startSurvey(survey);
+
+      if (survey.requiredPlan === 'standard') {
+        if (userLevel >= 3) return startSurvey(survey);
+        if (userLevel === 2) {
+          const taken = u.standardSurveysTakenCount || 0;
+          if (taken < 3) return startSurvey(survey);
+          const offer = getUpgradeOffer(u, 'standard');
+          if (offer) return showUpgradeModal({ offer, onSuccess: () => startSurvey(survey) });
+        }
+        return showSubscriptionModal({
+          requiredPlan: 'standard', surveyId: survey.id,
+          onSuccess: () => startSurvey(survey),
+        });
+      }
+
+      if (survey.requiredPlan === 'premium') {
+        if (userLevel >= 5) return startSurvey(survey);
+        if (userLevel === 4) {
+          const taken = u.premiumSurveysTakenCount || 0;
+          if (taken < 3) return startSurvey(survey);
+          const offer = getUpgradeOffer(u, 'premium');
+          if (offer) return showUpgradeModal({ offer, onSuccess: () => startSurvey(survey) });
+        }
+        return showSubscriptionModal({
+          requiredPlan: 'premium', surveyId: survey.id,
+          onSuccess: () => startSurvey(survey),
+        });
+      }
+    }
+
+    /* ---------- Survey taking ---------- */
+    let currentSurvey = null, currentQIndex = 0, surveyAnswers = [], surveyTimer = null;
+
+    function startSurvey(survey) {
+      currentSurvey = survey;
+      currentQIndex = 0;
+      surveyAnswers = [];
+      showSurveyQuestion();
+    }
+
+    function showSurveyQuestion() {
+      const container = document.getElementById('surveyQuestionsContainer');
+      const q = currentSurvey.questions[currentQIndex];
+      let html = `<div class="survey-question"><div class="question-text">${q.text}</div><div class="options">`;
+      q.options.forEach(opt => {
+        const checked = surveyAnswers[currentQIndex] === opt ? 'checked' : '';
+        html += `<label class="option"><input type="radio" name="q${currentQIndex}" value="${opt}" ${checked}><span>${opt}</span></label>`;
+      });
+      html += `</div></div>`;
+      html += currentQIndex < currentSurvey.questions.length - 1
+        ? `<button class="next-btn" id="nextSurveyBtn">Next</button>`
+        : `<button class="submit-btn" id="submitSurveyBtn">Complete Survey</button>`;
+      container.innerHTML = html;
+      openModal('surveyModal');
+      document.getElementById('nextSurveyBtn')?.addEventListener('click', handleNext);
+      document.getElementById('submitSurveyBtn')?.addEventListener('click', handleSubmit);
+    }
+
+    function loadingInModal(msg) {
+      document.getElementById('surveyQuestionsContainer').innerHTML =
+        `<div class="loading-spinner"><i class="fas fa-spinner fa-pulse"></i><p>${msg}</p></div>`;
+    }
+
+    function handleNext() {
+      const sel = document.querySelector(`input[name="q${currentQIndex}"]:checked`);
+      if (!sel) { showToast('Please select an answer'); return; }
+      surveyAnswers[currentQIndex] = sel.value;
+      loadingInModal('Loading next question...');
+      clearTimeout(surveyTimer);
+      surveyTimer = setTimeout(() => { currentQIndex++; showSurveyQuestion(); }, 1500);
+    }
+
+    function handleSubmit() {
+      const sel = document.querySelector(`input[name="q${currentQIndex}"]:checked`);
+      if (!sel) { showToast('Please select an answer'); return; }
+      surveyAnswers[currentQIndex] = sel.value;
+      loadingInModal('Submitting your answers...');
+      clearTimeout(surveyTimer);
+      surveyTimer = setTimeout(processFinalReward, 3000);
+    }
+
+    function processFinalReward() {
+      const u = requireAuth('login.html');
+      if (!u.completedSurveys.includes(currentSurvey.id)) {
+        const reward = currentSurvey.reward;
+        u.earningsTotal = (u.earningsTotal || 0) + reward;
+        u.balance = (u.balance || 0) + reward;
+        u.surveysCompleted = (u.surveysCompleted || 0) + 1;
+        u.completedSurveys.push(currentSurvey.id);
+        if (currentSurvey.requiredPlan === 'standard') u.standardSurveysTakenCount = (u.standardSurveysTakenCount || 0) + 1;
+        if (currentSurvey.requiredPlan === 'premium')  u.premiumSurveysTakenCount  = (u.premiumSurveysTakenCount  || 0) + 1;
+        updateUser(u);
+        updateShellUser(u);
+        renderSurveys();
+        closeModal('surveyModal');
+        Swal.fire({
+          title: '🎉 Survey Completed!',
+          html: `<div style="text-align:center"><i class="fas fa-check-circle" style="font-size:3rem;color:#10b981;margin-bottom:12px"></i><h3 style="margin:8px 0">You earned Ksh ${reward}!</h3><p>Thank you for sharing your feedback.</p></div>`,
+          confirmButtonText: 'OK', confirmButtonColor: '#4f46e5', allowOutsideClick: false,
+        });
+      } else {
+        closeModal('surveyModal');
+        Swal.fire('Info', 'Survey already completed!', 'info');
+      }
+    }
+
+    /* ---------- Filters ---------- */
+    function bindFilters() {
+      document.querySelectorAll('.filter').forEach(f => {
+        f.addEventListener('click', () => {
+          document.querySelectorAll('.filter').forEach(x => x.classList.remove('active'));
+          f.classList.add('active');
+          const mode = f.getAttribute('data-filter');
+          document.querySelectorAll('.survey-card').forEach(card => {
+            const s = surveys.find(x => x.id === card.getAttribute('data-id'));
+            card.style.display = (mode === 'all' || (s && s.requiredPlan === mode)) ? '' : 'none';
+          });
+        });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>SurveyEarn - Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:32px; }
+  .stat-card { background:#fff; border-radius:20px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:transform .2s, box-shadow .2s; }
+  .stat-card:hover { transform:translateY(-2px); box-shadow:0 12px 20px -12px rgba(0,0,0,0.1); }
+  .stat-card p { color:#6b7280; font-size:14px; margin-bottom:8px; }
+  .stat-card h3 { font-size:28px; font-weight:700; color:#1f2937; }
+  .stat-card button { margin-top:12px; background:none; border:none; color:#4f46e5; font-weight:500; cursor:pointer; font-size:14px; }
+  .two-col { display:grid; grid-template-columns:2fr 1fr; gap:24px; }
+  .large-card { background:#fff; border-radius:24px; padding:32px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .large-card i { font-size:48px; color:#d1d5db; margin-bottom:16px; }
+  .large-card h3 { font-size:20px; margin-bottom:8px; }
+  .large-card p { color:#6b7280; }
+  .large-card a { display:inline-block; margin-top:20px; color:#4f46e5; font-weight:500; text-decoration:none; }
+  .side-card { background:#fff; border-radius:24px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .side-card h3 { margin-bottom:16px; font-size:18px; }
+  .quick-action { background:#f9fafb; padding:14px 16px; border-radius:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:.2s; text-decoration:none; color:#1f2937; }
+  .quick-action:hover { background:#f3f4f6; }
+  .survey-question { animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  .progress-container { margin-bottom:28px; }
+  .progress-bar-bg { background:#eef2f6; border-radius:12px; height:8px; overflow:hidden; }
+  .progress-fill { background:linear-gradient(135deg,#4f46e5,#f97316); width:0%; height:100%; border-radius:12px; transition:width .4s ease; }
+  .progress-text { display:flex; justify-content:space-between; font-size:12px; color:#6b7280; margin-bottom:8px; }
+  .question-text { font-size:1.2rem; font-weight:600; color:#1f2937; margin-bottom:24px; line-height:1.4; }
+  .options { display:flex; flex-direction:column; gap:14px; margin-bottom:32px; }
+  .option { display:flex; align-items:center; gap:12px; background:#f9fafb; padding:14px 18px; border-radius:16px; border:1px solid #eef2f6; cursor:pointer; transition:all .2s; font-weight:500; color:#374151; }
+  .option:hover { background:#f3f4f6; border-color:#cbd5e1; transform:translateX(4px); }
+  .option input { width:18px; height:18px; accent-color:#4f46e5; margin:0; cursor:pointer; }
+  .option.selected { background:linear-gradient(135deg,rgba(79,70,229,0.08),rgba(249,115,22,0.08)); border-color:#4f46e5; }
+  @media (max-width:768px) {
+    .stats-grid { grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px; }
+    .stat-card { padding:16px; }
+    .stat-card h3 { font-size:22px; }
+    .stat-card p { font-size:12px; }
+    .two-col { grid-template-columns:1fr; gap:16px; }
+    .large-card { padding:24px; }
+    .large-card i { font-size:36px; }
+    .large-card h3 { font-size:18px; }
+    .side-card { padding:20px; }
+    .quick-action { padding:12px; font-size:14px; }
+  }
+  @media (max-width:480px) {
+    .stats-grid { gap:8px; }
+    .stat-card { padding:12px; }
+    .stat-card h3 { font-size:18px; }
+    .stat-card p { font-size:11px; }
+  }
+</style>
+</head>
+<body>
+  <div class="sidebar" id="shellSidebar"></div>
+  <div class="main">
+    <div class="topbar" id="shellTopbar"></div>
+    <div class="content">
+      <div id="shellMobileBalance"></div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><p>Total Earnings</p><h3 id="totalEarnings">Ksh 0</h3></div>
+        <div class="stat-card"><p>Surveys Completed</p><h3 id="surveysCompleted">0</h3></div>
+        <div class="stat-card"><p>Referral Earnings</p><h3 id="referralEarnings">Ksh 0</h3></div>
+        <div class="stat-card"><p>Available Balance</p><h3 id="availableBalance">Ksh 0</h3><button class="dash-withdraw-btn">Withdraw</button></div>
+      </div>
+
+      <div class="two-col">
+        <div class="large-card" id="earningsMessageCard">
+          <i class="fas fa-dollar-sign"></i>
+          <h3>No earnings yet</h3>
+          <p>Complete surveys to start earning rewards</p>
+          <a href="surveys.html">Browse Available Surveys →</a>
+        </div>
+        <div class="side-card">
+          <h3>Quick Actions</h3>
+          <a href="surveys.html" class="quick-action"><span>Take Surveys</span><i class="fas fa-arrow-right"></i></a>
+          <a href="settings.html" class="quick-action"><span>Settings</span><i class="fas fa-arrow-right"></i></a>
+          <a href="referrals.html" class="quick-action"><span>Invite Friends</span><i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav" id="shellBottomNav"></div>
+  <div id="shellModals"></div>
+  <div id="toast" class="toast"></div>
+
+  <div id="firstSurveyModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Welcome! Complete your first survey</h3>
+        <button class="close-modal" data-close="firstSurveyModal">&times;</button>
+      </div>
+      <div class="modal-body" id="surveyContent"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+  <script type="module">
+    import { renderShell, showToast, closeModal, updateShellUser } from './shared/ui.js';
+    import { requireAuth, updateUser } from './shared/auth.js';
+    import { handleWithdrawClick } from './shared/withdrawal.js';
+
+    const user = requireAuth('login.html');
+    if (user) {
+      renderShell({ activePage: 'dashboard', title: 'Dashboard', subtitle: 'Welcome back, {name}' });
+      updateDashboardUI(user);
+      bindWithdrawButtons();
+
+      if (!user.completedSurveys.includes('first_survey')) {
+        setTimeout(showFirstSurvey, 500);
+      }
+    }
+
+    function updateDashboardUI(user) {
+      document.getElementById('totalEarnings').innerText   = `Ksh ${user.earningsTotal || 0}`;
+      document.getElementById('surveysCompleted').innerText = user.surveysCompleted || 0;
+      document.getElementById('referralEarnings').innerText = `Ksh ${user.referralEarnings || 0}`;
+      document.getElementById('availableBalance').innerText = `Ksh ${user.balance || 0}`;
+
+      const card = document.getElementById('earningsMessageCard');
+      if ((user.earningsTotal || 0) > 0) {
+        card.innerHTML = `<i class="fas fa-chart-line"></i><h3>You've earned Ksh ${user.earningsTotal}!</h3><p>Keep going to reach your goals</p><a href="surveys.html">Take More Surveys →</a>`;
+      }
+      updateShellUser(user);
+    }
+
+    function bindWithdrawButtons() {
+      document.querySelectorAll('.dash-withdraw-btn').forEach(b => b.addEventListener('click', handleWithdrawClick));
+    }
+
+    // ----- First survey -----
+    const firstSurveyQuestions = [
+      "How often do you use mobile money services?",
+      "What is your preferred payment method for online services?",
+      "How likely are you to recommend SurveyEarn to a friend?",
+      "What type of surveys interest you most?",
+      "How much time can you dedicate to surveys daily?",
+      "What motivates you to take surveys?",
+      "How would you rate the ease of using SurveyEarn?"
+    ];
+    const surveyOptions = [
+      ["Daily","Weekly","Monthly","Rarely"],
+      ["M-Pesa","Credit Card","PayPal","Bank Transfer"],
+      ["Very Likely","Likely","Neutral","Unlikely"],
+      ["Technology","Finance","Shopping","Entertainment"],
+      ["Less than 15 min","15-30 min","30-60 min","More than 60 min"],
+      ["Earning money","Giving opinion","Learning new things","Killing time"],
+      ["Very easy","Easy","Average","Difficult"]
+    ];
+    let currentQuestion = 0;
+    let answers = [];
+    let surveyTimer = null;
+
+    function showFirstSurvey() {
+      const u = requireAuth('login.html');
+      if (!u || u.completedSurveys.includes('first_survey')) return;
+      currentQuestion = 0; answers = [];
+      renderSurveyQuestion();
+      document.getElementById('firstSurveyModal').classList.add('active');
+    }
+
+    function renderSurveyQuestion() {
+      const c = document.getElementById('surveyContent');
+      const total = firstSurveyQuestions.length;
+      const progress = ((currentQuestion + 1) / total) * 100;
+      let html = `<div class="progress-container"><div class="progress-text"><span>Question ${currentQuestion+1} of ${total}</span><span>${Math.round(progress)}%</span></div><div class="progress-bar-bg"><div class="progress-fill" style="width:${progress}%"></div></div></div><div class="survey-question"><div class="question-text">${firstSurveyQuestions[currentQuestion]}</div><div class="options">`;
+      surveyOptions[currentQuestion].forEach(opt => {
+        const checked = answers[currentQuestion] === opt ? 'checked' : '';
+        html += `<label class="option" data-val="${opt}"><input type="radio" name="surveyQ" value="${opt}" ${checked}><span>${opt}</span></label>`;
+      });
+      html += `</div>`;
+      html += currentQuestion < total - 1
+        ? `<button class="next-btn" id="nextSurveyBtn">Next Question</button>`
+        : `<button class="submit-btn" id="submitSurveyBtn">Complete Survey</button>`;
+      html += `</div>`;
+      c.innerHTML = html;
+
+      document.querySelectorAll('#surveyContent .option').forEach(opt => {
+        const radio = opt.querySelector('input');
+        radio.addEventListener('change', () => {
+          document.querySelectorAll('#surveyContent .option').forEach(o => o.classList.remove('selected'));
+          if (radio.checked) opt.classList.add('selected');
+        });
+        if (radio.checked) opt.classList.add('selected');
+        opt.addEventListener('click', () => { radio.checked = true; radio.dispatchEvent(new Event('change')); });
+      });
+      document.getElementById('nextSurveyBtn')?.addEventListener('click', handleNext);
+      document.getElementById('submitSurveyBtn')?.addEventListener('click', handleSubmit);
+    }
+
+    function loadingInModal(msg) {
+      document.getElementById('surveyContent').innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-pulse"></i><p>${msg}</p></div>`;
+    }
+    function handleNext() {
+      const sel = document.querySelector('input[name="surveyQ"]:checked');
+      if (!sel) { showToast('Please select an answer'); return; }
+      answers[currentQuestion] = sel.value;
+      loadingInModal('Loading next question...');
+      clearTimeout(surveyTimer);
+      surveyTimer = setTimeout(() => { currentQuestion++; renderSurveyQuestion(); }, 1500);
+    }
+    function handleSubmit() {
+      const sel = document.querySelector('input[name="surveyQ"]:checked');
+      if (!sel) { showToast('Please select an answer'); return; }
+      answers[currentQuestion] = sel.value;
+      loadingInModal('Submitting your answers...');
+      clearTimeout(surveyTimer);
+      surveyTimer = setTimeout(processFinalReward, 3000);
+    }
+    function processFinalReward() {
+      const u = requireAuth('login.html');
+      if (u && !u.completedSurveys.includes('first_survey')) {
+        const reward = 670;
+        u.earningsTotal = (u.earningsTotal || 0) + reward;
+        u.balance = (u.balance || 0) + reward;
+        u.surveysCompleted = (u.surveysCompleted || 0) + 1;
+        u.completedSurveys.push('first_survey');
+        updateUser(u);
+        updateDashboardUI(u);
+        closeModal('firstSurveyModal');
+        Swal.fire({
+          title: '🎉 Survey Completed!',
+          html: `<div style="text-align:center"><i class="fas fa-check-circle" style="font-size:3rem;color:#10b981;margin-bottom:12px"></i><h3 style="margin:8px 0">You earned Ksh ${reward}!</h3><p>Thank you for sharing your feedback.</p></div>`,
+          confirmButtonText: 'OK', confirmButtonColor: '#4f46e5', allowOutsideClick: false,
+        });
+        currentQuestion = 0; answers = [];
+      } else {
+        closeModal('firstSurveyModal');
+        Swal.fire('Info', 'Survey already completed!', 'info');
+      }
+    }
+  </script>
+</body>
+</html>

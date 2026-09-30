@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>SurveyEarn - Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  .setting-section { background:#fff; border-radius:24px; padding:24px; margin-bottom:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .section-header h3 { font-size:18px; font-weight:600; }
+  .btn-outline { background:#4f46e5; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:500; cursor:pointer; transition:.2s; }
+  .btn-outline:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(79,70,229,0.2); }
+  .payment-method-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .payment-method-input { flex:1; padding:12px; border:1px solid #eef2f6; border-radius:12px; font-size:14px; outline:none; transition:border .2s; }
+  .payment-method-input:focus { border-color:#4f46e5; }
+  .payment-display { display:flex; align-items:center; justify-content:space-between; background:#f9fafb; padding:12px 16px; border-radius:12px; border:1px solid #eef2f6; flex-wrap:wrap; gap:12px; }
+  .payment-number { font-weight:600; color:#1f2937; font-size:1rem; }
+  .payment-actions { display:flex; gap:8px; }
+  .action-btn { background:none; border:none; cursor:pointer; padding:4px 8px; border-radius:8px; font-size:.85rem; display:inline-flex; align-items:center; gap:4px; transition:all .2s; }
+  .action-btn.edit { color:#4f46e5; }
+  .action-btn.edit:hover { background:rgba(79,70,229,0.1); }
+  .action-btn.delete { color:#ef4444; }
+  .action-btn.delete:hover { background:rgba(239,68,68,0.1); }
+  .profile-info { display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
+  .info-item { display:flex; align-items:center; gap:12px; background:#f9fafb; padding:12px 20px; border-radius:16px; min-width:200px; }
+  .info-item i { font-size:20px; color:#4f46e5; }
+  .balance-box { background:#f9fafb; padding:20px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+  .security-item { display:flex; align-items:center; gap:16px; background:#f9fafb; padding:16px; border-radius:16px; }
+  @media (max-width:768px) {
+    .payment-method-row { flex-direction:column; align-items:stretch; }
+    .payment-display { flex-direction:column; align-items:stretch; text-align:center; }
+    .payment-actions { justify-content:center; }
+    .profile-info { flex-direction:column; gap:12px; }
+    .info-item { width:100%; }
+    .section-header { flex-direction:column; align-items:flex-start; gap:12px; }
+    .balance-box { flex-direction:column; align-items:flex-start; gap:12px; }
+  }
+</style>
+</head>
+<body>
+  <div class="sidebar" id="shellSidebar"></div>
+  <div class="main">
+    <div class="topbar" id="shellTopbar"></div>
+    <div class="content">
+      <div id="shellMobileBalance"></div>
+
+      <div class="setting-section">
+        <div class="section-header"><h3>Profile Information</h3></div>
+        <div class="profile-info">
+          <div class="info-item"><i class="fas fa-user"></i><div><p class="label">Name</p><strong id="profileName">—</strong></div></div>
+          <div class="info-item"><i class="fas fa-envelope"></i><div><p class="label">Email</p><strong id="profileEmail">—</strong></div></div>
+        </div>
+      </div>
+
+      <div class="setting-section" id="paymentMethodSection">
+        <div class="section-header"><h3>Payment Method</h3></div>
+        <div id="paymentMethodContainer"></div>
+      </div>
+
+      <div class="setting-section">
+        <div class="section-header">
+          <h3>Withdrawal</h3>
+          <button class="btn-outline" id="withdrawSettingsBtn">Withdraw Funds</button>
+        </div>
+        <div class="balance-box">
+          <div><p>Available Balance</p><h2 style="font-size:28px;" id="balanceDisplay">Ksh 0</h2></div>
+        </div>
+      </div>
+
+      <div class="setting-section">
+        <div class="section-header">
+          <h3>Security</h3>
+          <button class="btn-outline" id="changePasswordBtn">Change Password</button>
+        </div>
+        <div class="security-item">
+          <i class="fas fa-lock" style="font-size:24px;color:#4f46e5;"></i>
+          <div><p><strong>Password</strong></p><small id="lastChanged">Last changed: Never</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav" id="shellBottomNav"></div>
+  <div id="shellModals"></div>
+  <div id="toast" class="toast"></div>
+
+  <div id="changePasswordModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Change Password</h3>
+        <button class="close-modal" data-close="changePasswordModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="withdraw-input"><label>Current Password</label><input type="password" id="currentPassword" placeholder="Enter current password"></div>
+        <div class="withdraw-input"><label>New Password</label><input type="password" id="newPassword" placeholder="At least 6 characters"></div>
+        <div class="withdraw-input"><label>Confirm New Password</label><input type="password" id="confirmPassword" placeholder="Re-enter new password"></div>
+        <button class="btn" id="updatePasswordBtn">Update Password</button>
+        <button class="back-btn" id="cancelPasswordBtn" style="margin-top:12px;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+  <script type="module">
+    import { renderShell, showToast, closeModal, openModal, updateShellUser, escapeHtml } from './shared/ui.js';
+    import { requireAuth, updateUser } from './shared/auth.js';
+    import { handleWithdrawClick } from './shared/withdrawal.js';
+
+    const user = requireAuth('login.html');
+    if (user) {
+      renderShell({ activePage: 'settings', title: 'Settings', subtitle: 'Manage your account' });
+      refreshUI(user);
+    }
+
+    function refreshUI(u) {
+      document.getElementById('profileName').innerText    = u.name;
+      document.getElementById('profileEmail').innerText   = u.email;
+      document.getElementById('balanceDisplay').innerText = `Ksh ${u.balance || 0}`;
+      document.getElementById('lastChanged').innerText    = u.passwordLastChanged ? `Last changed: ${u.passwordLastChanged}` : 'Last changed: Never';
+      updateShellUser(u);
+      renderPaymentMethod(u);
+    }
+
+    /* ---------- Payment method editor ---------- */
+    function renderPaymentMethod(u) {
+      const c = document.getElementById('paymentMethodContainer');
+      if (!u.mpesaNumber) {
+        c.innerHTML = `<div class="payment-method-row">
+          <input type="tel" id="mpesaNumberInput" class="payment-method-input" placeholder="07XXXXXXXX">
+          <button class="btn-outline" id="savePaymentMethodBtn">Save</button>
+        </div>`;
+        document.getElementById('savePaymentMethodBtn').addEventListener('click', savePaymentMethod);
+      } else {
+        c.innerHTML = `<div class="payment-display">
+          <div class="payment-number"><i class="fas fa-phone-alt" style="margin-right:8px;"></i>${escapeHtml(u.mpesaNumber)}</div>
+          <div class="payment-actions">
+            <button class="action-btn edit" id="editPaymentBtn"><i class="fas fa-edit"></i> Edit</button>
+            <button class="action-btn delete" id="deletePaymentBtn"><i class="fas fa-trash-alt"></i> Delete</button>
+          </div>
+        </div>`;
+        document.getElementById('editPaymentBtn').addEventListener('click', editPaymentMethod);
+        document.getElementById('deletePaymentBtn').addEventListener('click', deletePaymentMethod);
+      }
+    }
+    function savePaymentMethod() {
+      const u = requireAuth('login.html');
+      const m = document.getElementById('mpesaNumberInput').value.trim();
+      if (!m) { showToast('Please enter your M-Pesa number'); return; }
+      if (!/^07\d{8}$/.test(m)) { showToast('Enter a valid M-Pesa number (07XXXXXXXX)'); return; }
+      u.mpesaNumber = m;
+      updateUser(u);
+      refreshUI(u);
+      showToast('Payment method saved');
+    }
+    function editPaymentMethod() {
+      const u = requireAuth('login.html');
+      const c = document.getElementById('paymentMethodContainer');
+      c.innerHTML = `<div class="payment-method-row">
+        <input type="tel" id="mpesaNumberInput" class="payment-method-input" value="${escapeHtml(u.mpesaNumber)}">
+        <button class="btn-outline" id="savePaymentMethodBtn">Save</button>
+        <button class="btn-outline" id="cancelEditBtn" style="background:#f3f4f6;color:#4b5563;">Cancel</button>
+      </div>`;
+      document.getElementById('savePaymentMethodBtn').addEventListener('click', savePaymentMethod);
+      document.getElementById('cancelEditBtn').addEventListener('click', () => renderPaymentMethod(u));
+    }
+    function deletePaymentMethod() {
+      const u = requireAuth('login.html');
+      Swal.fire({
+        title: 'Remove Payment Method?',
+        text: 'You will need to add a new M-Pesa number to withdraw funds.',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Yes, remove', cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ef4444',
+      }).then(r => {
+        if (r.isConfirmed) {
+          u.mpesaNumber = null;
+          updateUser(u);
+          refreshUI(u);
+          showToast('Payment method removed');
+        }
+      });
+    }
+
+    /* ---------- Password ---------- */
+    function showChangePasswordModal() {
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      openModal('changePasswordModal');
+    }
+    function updatePassword() {
+      const u = requireAuth('login.html');
+      const cur = document.getElementById('currentPassword').value;
+      const np  = document.getElementById('newPassword').value;
+      const cp  = document.getElementById('confirmPassword').value;
+      if (!cur || !np || !cp) { showToast('All fields are required'); return; }
+      if (u.password !== cur) { showToast('Current password is incorrect'); return; }
+      if (np.length < 6) { showToast('New password must be at least 6 characters'); return; }
+      if (np !== cp) { showToast('New passwords do not match'); return; }
+      u.password = np;
+      u.passwordLastChanged = new Date().toLocaleDateString();
+      updateUser(u);
+      refreshUI(u);
+      closeModal('changePasswordModal');
+      Swal.fire('Success', 'Your password has been updated.', 'success');
+    }
+
+    /* ---------- Withdraw ---------- */
+    document.getElementById('withdrawSettingsBtn').addEventListener('click', handleWithdrawClick);
+    document.getElementById('changePasswordBtn').addEventListener('click', showChangePasswordModal);
+    document.getElementById('updatePasswordBtn').addEventListener('click', updatePassword);
+    document.getElementById('cancelPasswordBtn').addEventListener('click', () => closeModal('changePasswordModal'));
+  </script>
+</body>
+</html>

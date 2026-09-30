@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>SurveyEarn - Referrals</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  .stats-row { display:flex; gap:24px; margin-bottom:32px; }
+  .stat-box { background:#fff; border-radius:20px; padding:24px; flex:1; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .stat-box h2 { font-size:32px; font-weight:700; margin-top:8px; }
+  .stat-icon { width:48px; height:48px; background:#eef0ff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#4f46e5; font-size:24px; }
+  .share-card { background:#fff; border-radius:24px; padding:32px; text-align:center; margin-bottom:32px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .share-card h2 { font-size:24px; }
+  .ref-code { background:#f9fafb; border:2px dashed #d1d5db; display:inline-block; padding:20px 40px; border-radius:16px; margin:24px 0; position:relative; }
+  .ref-code span { font-size:12px; color:#6b7280; display:block; margin-bottom:8px; }
+  .ref-code h3 { font-size:24px; letter-spacing:2px; }
+  .copy-icon { position:absolute; top:12px; right:12px; cursor:pointer; color:#6b7280; }
+  .steps { display:flex; gap:20px; margin-top:20px; }
+  .step { flex:1; background:#f9fafb; padding:20px; border-radius:16px; text-align:center; }
+  .step h4 { font-weight:600; margin-bottom:8px; font-size:1rem; }
+  .step p { font-size:.85rem; color:#6b7280; }
+  .empty-state-referrals { text-align:center; padding:40px; background:#fff; border-radius:24px; margin-top:24px; color:#6b7280; }
+  .empty-state-referrals i { font-size:48px; margin-bottom:16px; opacity:.5; }
+  .empty-state-referrals h3 { font-size:1.25rem; margin-bottom:8px; }
+  @media (max-width:768px) {
+    .stats-row { flex-direction:column; gap:12px; }
+    .stat-box { padding:16px; }
+    .stat-box h2 { font-size:24px; }
+    .share-card { padding:20px; }
+    .share-card h2 { font-size:20px; }
+    .ref-code { padding:12px 24px; }
+    .ref-code h3 { font-size:18px; }
+    .steps { flex-direction:column; gap:12px; }
+  }
+</style>
+</head>
+<body>
+  <div class="sidebar" id="shellSidebar"></div>
+  <div class="main">
+    <div class="topbar" id="shellTopbar"></div>
+    <div class="content">
+      <div id="shellMobileBalance"></div>
+
+      <div class="stats-row">
+        <div class="stat-box"><div><p>Total Referrals</p><h2 id="totalReferrals">0</h2></div><div class="stat-icon"><i class="fas fa-users"></i></div></div>
+        <div class="stat-box"><div><p>Referral Earnings</p><h2 id="referralEarnings">Ksh 0</h2></div><div class="stat-icon"><i class="fas fa-gift"></i></div></div>
+        <div class="stat-box"><div><p>Conversion Rate</p><h2 id="conversionRate">0%</h2></div><div class="stat-icon"><i class="fas fa-chart-line"></i></div></div>
+      </div>
+
+      <div class="share-card">
+        <div class="stat-icon" style="margin:0 auto 16px;"><i class="fas fa-gift"></i></div>
+        <h2>Share Your Referral Code</h2>
+        <p style="margin:12px 0;">Share your code with friends and earn Ksh 200 for each friend who completes their first survey</p>
+        <div class="ref-code">
+          <span>Your Referral Code</span>
+          <h3 id="referralCode">--------</h3>
+          <i class="fas fa-copy copy-icon" id="copyCode"></i>
+        </div>
+        <div class="steps">
+          <div class="step"><h4>Step 1</h4><p>Share your unique referral code</p></div>
+          <div class="step"><h4>Step 2</h4><p>Friend signs up using your code</p></div>
+          <div class="step"><h4>Step 3</h4><p>Both earn rewards!</p></div>
+        </div>
+      </div>
+
+      <div class="empty-state-referrals" id="referralEmptyState">
+        <i class="fas fa-user-friends"></i>
+        <h3>No referrals yet</h3>
+        <p>Share your referral code to start earning rewards</p>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav" id="shellBottomNav"></div>
+  <div id="shellModals"></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+  <script type="module">
+    import { renderShell, showToast, updateShellUser } from './shared/ui.js';
+    import { requireAuth } from './shared/auth.js';
+
+    const user = requireAuth('login.html');
+    if (user) {
+      renderShell({ activePage: 'referrals', title: 'Referrals', subtitle: 'Invite friends and earn together' });
+      document.getElementById('totalReferrals').innerText   = user.totalReferrals || 0;
+      document.getElementById('referralEarnings').innerText = `Ksh ${user.referralEarnings || 0}`;
+      document.getElementById('conversionRate').innerText   = `${user.conversionRate || 0}%`;
+      document.getElementById('referralCode').innerText     = user.referralCode || '--------';
+      updateShellUser(user);
+    }
+
+    document.getElementById('copyCode').addEventListener('click', () => {
+      const code = document.getElementById('referralCode').innerText;
+      navigator.clipboard.writeText(code);
+      showToast('Referral code copied to clipboard!');
+    });
+  </script>
+</body>
+</html>

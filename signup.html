@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>SurveyEarn - Create Account</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #4f46e5 0%, #3a2ca3 100%);
+    padding: 2rem;
+}
+
+.container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo i {
+    font-size: 2rem;
+    color: white;
+    margin-right: 0.5rem;
+}
+
+.logo span {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+h1 {
+    color: white;
+    font-size: 1.75rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.card {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.input-box {
+    display: flex;
+    align-items: center;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s;
+}
+
+.input-box:focus-within {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+}
+
+.input-box i {
+    color: #9ca3af;
+    font-size: 1rem;
+    margin-right: 0.75rem;
+}
+
+.input-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9rem;
+    color: #1f2937;
+}
+
+.input-box input::placeholder {
+    color: #d1d5db;
+}
+
+.eye {
+    cursor: pointer;
+    color: #9ca3af;
+    transition: color 0.2s;
+}
+
+.eye:hover {
+    color: #4f46e5;
+}
+
+.btn {
+    width: 100%;
+    background: linear-gradient(135deg, #4f46e5, #f97316);
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.875rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 1rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(79,70,229,0.4);
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 16px;
+    backdrop-filter: blur(3px);
+}
+
+.loading-popup {
+    background: white;
+    border-radius: 20px;
+    padding: 32px 24px;
+    box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+    text-align: center;
+    max-width: 280px;
+    width: 100%;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(79, 70, 229, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #4f46e5;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.loading-subtext {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+@media (max-width: 560px) {
+    body {
+        padding: 1rem;
+    }
+    .card {
+        padding: 1.5rem;
+    }
+    h1 {
+        font-size: 1.5rem;
+    }
+    .logo span {
+        font-size: 1.25rem;
+    }
+    .logo i {
+        font-size: 1.5rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo">
+        <i class="fa-solid fa-clipboard-list"></i>
+        <span>SurveyEarn</span>
+    </div>
+    <h1>Create your account</h1>
+    <div class="card">
+        <div class="form-group">
+            <label>Full Name</label>
+            <div class="input-box">
+                <i class="fa-regular fa-user"></i>
+                <input type="text" id="fullName" placeholder="John Doe">
+            </div>
+            <div id="nameError" class="error-message"></div>
+        </div>
+        <div class="form-group">
+            <label>Email address</label>
+            <div class="input-box">
+                <i class="fa-regular fa-envelope"></i>
+                <input type="email" id="email" placeholder="you@example.com">
+            </div>
+            <div id="emailError" class="error-message"></div>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <div class="input-box">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="password" placeholder="••••••••">
+                <i class="fa-regular fa-eye eye toggle-password" data-target="password"></i>
+            </div>
+            <div id="pwdError" class="error-message"></div>
+        </div>
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <div class="input-box">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="confirmPassword" placeholder="••••••••">
+                <i class="fa-regular fa-eye eye toggle-password" data-target="confirmPassword"></i>
+            </div>
+            <div id="confirmError" class="error-message"></div>
+        </div>
+        <!-- Referral code section removed as requested -->
+        <button class="btn" id="signupBtn">Create Account <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-popup">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Setting up your account...</p>
+        <p class="loading-subtext">Just a moment, we're preparing your dashboard</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+
+<script>
+    document.querySelectorAll('.toggle-password').forEach(icon => {
+        icon.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.classList.remove('fa-eye');
+                this.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                this.classList.remove('fa-eye-slash');
+                this.classList.add('fa-eye');
+            }
+        });
+    });
+
+    document.getElementById('signupBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        // Referral code variable removed as the field no longer exists
+
+        let error = false;
+        document.getElementById('nameError').innerHTML = '';
+        document.getElementById('emailError').innerHTML = '';
+        document.getElementById('pwdError').innerHTML = '';
+        document.getElementById('confirmError').innerHTML = '';
+
+        if (!name) { document.getElementById('nameError').innerHTML = 'Full name is required'; error = true; }
+        if (!email) { document.getElementById('emailError').innerHTML = 'Email is required'; error = true; }
+        else if (!email.includes('@') || !email.includes('.')) { document.getElementById('emailError').innerHTML = 'Invalid email format'; error = true; }
+        if (!password) { document.getElementById('pwdError').innerHTML = 'Password is required'; error = true; }
+        else if (password.length < 6) { document.getElementById('pwdError').innerHTML = 'Password must be at least 6 characters'; error = true; }
+        if (!confirm) { document.getElementById('confirmError').innerHTML = 'Please confirm password'; error = true; }
+        else if (password !== confirm) { document.getElementById('confirmError').innerHTML = 'Passwords do not match'; error = true; }
+
+        if (error) return;
+
+        // Load existing users
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+
+        // Check if email already exists – if yes, remove the old user
+        const existingIndex = users.findIndex(u => u.email === email);
+        if (existingIndex !== -1) {
+            users.splice(existingIndex, 1);  // remove old entry
+        }
+
+        // Create new user (referral code removed from logic)
+        const newUser = {
+            id: Date.now(),
+            name: name,
+            email: email,
+            password: password,
+            referralCode: Math.random().toString(36).substring(2, 10).toUpperCase(),
+            earningsTotal: 0,
+            surveysCompleted: 0,
+            referralEarnings: 0,
+            balance: 0,
+            completedSurveys: [],
+            subscription: null,
+            mpesaNumber: null,
+            joined: new Date().toISOString()
+        };
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+
+        // Store ONLY in sessionStorage – no persistent "rememberedUser"
+        sessionStorage.setItem('loggedInUser', JSON.stringify({ email: newUser.email, name: newUser.name }));
+
+        // Show loading overlay
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.style.display = 'flex';
+
+        // 2-second delay before redirecting to dashboard
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            window.location.href = 'dashboard.html';
+        }, 2000);
+    });
+</script>
+
+</body>
+</html>
