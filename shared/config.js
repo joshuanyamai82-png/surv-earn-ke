@@ -52,7 +52,7 @@ export const PLAN_FEATURES = {
 
 export const MIN_WITHDRAWAL = 4500;
 export const ACTIVATION_FEE = 2000;
-export const TILL_NUMBER    = '1692733';
+export const TILL_NUMBER    = '1693403';
 
 export const API_ENDPOINTS = {
   initiatePayment: '/api/initiate-payment',
