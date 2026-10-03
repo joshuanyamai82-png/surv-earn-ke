@@ -42,7 +42,6 @@ function renderManualFallback({ amount, label, phoneNumber, returnFn, onSuccess 
     const amt = extractAmountFromMpesaMessage(raw);
     if (amt === null) { showToast('Could not extract amount from the message'); return; }
     if (Math.abs(amt - amount) < 0.01) {
-      // Record manually
       const user = getCurrentUser();
       if (!user) { showToast('User not found'); return; }
       if (!user.manualPaymentRecords) user.manualPaymentRecords = [];
@@ -115,54 +114,65 @@ function showPlanSelection({ requiredPlan, surveyId, onSuccess }) {
   _selectedPlan = null;
   const modal = document.getElementById('subscriptionModal');
   const container = document.getElementById('subscriptionContent');
-  const titleEl = document.getElementById('subscriptionModalTitle');
-  titleEl.innerText = 'Choose a Subscription Plan';
+  document.getElementById('subscriptionModalTitle').innerText = 'Choose a Subscription Plan';
 
+  /* Banner telling the user why they need a plan (only when coming from a locked survey) */
   let banner = '';
   if (requiredPlan === 'standard') {
-    banner = '<div style="margin-bottom:20px;background:#fef3c7;padding:12px;border-radius:12px;"><i class="fas fa-info-circle"></i> This survey requires a <strong>Standard</strong> or higher plan.</div>';
+    banner = '<div style="margin-bottom:16px;background:#fef3c7;padding:12px;border-radius:12px;font-size:0.9rem;"><i class="fas fa-info-circle"></i> This survey requires a <strong>Standard</strong> or higher plan.</div>';
   } else if (requiredPlan === 'premium') {
-    banner = '<div style="margin-bottom:20px;background:#f1e5ff;padding:12px;border-radius:12px;"><i class="fas fa-info-circle"></i> This survey requires a <strong>Premium</strong> or higher plan.</div>';
+    banner = '<div style="margin-bottom:16px;background:#f1e5ff;padding:12px;border-radius:12px;font-size:0.9rem;"><i class="fas fa-info-circle"></i> This survey requires a <strong>Premium</strong> or higher plan.</div>';
   }
 
-  const planCards = PLANS.map(p => {
-    const feat = (PLAN_FEATURES[p.name] || []).map(f => `<li><i class="fas fa-check-circle"></i> ${escapeHtml(f)}</li>`).join('');
-    const badge = p.badge ? `<span style="font-size:0.7rem;background:#f97316;color:white;padding:2px 8px;border-radius:20px;">${p.badge}</span>` : '';
+  /* Which plan should be auto-selected for this context? */
+  const defaultPlanName =
+    requiredPlan === 'premium'  ? 'Premium'  :
+    requiredPlan === 'standard' ? 'Standard' : null;
+
+  /* Preselect if the plan exists */
+  if (defaultPlanName) {
+    const plan = PLANS.find(p => p.name === defaultPlanName);
+    if (plan) _selectedPlan = { name: plan.name, price: plan.price };
+  }
+
+  /* Build plan rows using the .sub-plan-row styling */
+  const planRows = PLANS.map(p => {
+    const isRequired = defaultPlanName === p.name;
+    const badgeText  = isRequired ? '✓ Required for this survey' : (p.badge || '');
+    const badgeClass = isRequired ? 'badge-required' : 'badge-promo';
+    const features = (PLAN_FEATURES[p.name] || []).map(f =>
+      `<li style="font-size:0.82rem;color:#4b5563;display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+        <i class="fas fa-check" style="color:#10b981;font-size:11px;width:14px;"></i>${escapeHtml(f)}
+      </li>`).join('');
+
     return `
-      <div class="subscription-plan" data-plan="${p.name}" data-price="${p.price}">
-        <div class="plan-header">
-          <span class="plan-name">${p.name}</span>
-          <span class="plan-price">Ksh ${p.price} / month</span>
-          ${badge}
+      <div class="sub-plan-row ${isRequired ? 'sub-plan-selected' : ''}" data-plan="${p.name}">
+        ${badgeText ? `<span class="sub-plan-badge ${badgeClass}">${badgeText}</span>` : ''}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span class="plan-row-name" style="font-weight:700;font-size:1rem;color:#1f2937;">${p.name}</span>
+          <span style="font-weight:700;color:#4f46e5;">Ksh ${p.price} / month</span>
         </div>
-        <ul class="plan-features">${feat}</ul>
+        <ul style="list-style:none;padding:0;margin:0;">${features}</ul>
       </div>`;
   }).join('');
 
   container.innerHTML = `
     ${banner}
-    <div style="margin-bottom:20px;"><p>Select a plan that fits your needs. All plans include withdrawals after reaching Ksh ${MIN_WITHDRAWAL}.</p></div>
-    ${planCards}
-    <button class="next-btn" id="nextToMpesa">Continue</button>`;
+    <p style="color:#6b7280;font-size:0.9rem;margin-bottom:16px;">
+      Select a plan that fits your needs. All plans include withdrawals after reaching Ksh ${MIN_WITHDRAWAL}.
+    </p>
+    <div id="plansList">${planRows}</div>
+    <div class="modal-footer-sticky">
+      <button class="next-btn" id="nextToMpesa">Continue</button>
+    </div>`;
 
-  document.querySelectorAll('.subscription-plan').forEach(el => {
-    const planName = el.getAttribute('data-plan');
-    if ((requiredPlan === 'standard' && planName === 'Standard') ||
-        (requiredPlan === 'premium'  && planName === 'Premium')) {
-      el.classList.add('selected');
-      _selectedPlan = { name: planName, price: parseInt(el.getAttribute('data-price')) };
-      const h = el.querySelector('.plan-header');
-      if (h && !el.querySelector('.plan-recommended-badge')) {
-        const b = document.createElement('span');
-        b.className = 'plan-recommended-badge';
-        b.innerText = '✓ Required for this survey';
-        h.appendChild(b);
-      }
-    }
-    el.addEventListener('click', () => {
-      document.querySelectorAll('.subscription-plan').forEach(p => p.classList.remove('selected'));
-      el.classList.add('selected');
-      _selectedPlan = { name: planName, price: parseInt(el.getAttribute('data-price')) };
+  container.querySelectorAll('.sub-plan-row').forEach(row => {
+    row.addEventListener('click', () => {
+      container.querySelectorAll('.sub-plan-row').forEach(r => r.classList.remove('sub-plan-selected'));
+      row.classList.add('sub-plan-selected');
+      const planName = row.getAttribute('data-plan');
+      const plan = PLANS.find(p => p.name === planName);
+      if (plan) _selectedPlan = { name: plan.name, price: plan.price };
     });
   });
 
@@ -183,12 +193,13 @@ function showMpesaStep(plan, { surveyId, onSuccess }) {
       <p>Enter your M-Pesa number to pay Ksh ${plan.price}.</p>
     </div>
     <div class="mpesa-input"><input type="tel" id="mpesaNumber" placeholder="07XXXXXXXX" style="width:100%;padding:12px;border:1px solid #eef2f6;border-radius:12px;"></div>
-    <button class="btn" id="confirmSubscription">Subscribe Now</button>
-    <button class="back-btn" id="backToPlans">← Back to plans</button>`;
+    <div class="modal-footer-sticky">
+      <button class="btn" id="confirmSubscription">Subscribe Now</button>
+      <button class="back-btn" id="backToPlans" style="margin-top:10px;">← Back to plans</button>
+    </div>`;
 
   const returnFn = () => showMpesaStep(plan, { surveyId, onSuccess });
-
-  document.getElementById('backToPlans').addEventListener('click', () => showPlanSelection({ surveyId, onSuccess }));
+  document.getElementById('backToPlans').addEventListener('click', () => showPlanSelection({ requiredPlan: null, surveyId, onSuccess }));
 
   document.getElementById('confirmSubscription').addEventListener('click', () => {
     const phone = document.getElementById('mpesaNumber').value.trim();
@@ -237,11 +248,12 @@ export function showActivationFeeModal({ onSuccess } = {}) {
     </div>
     <div style="margin-bottom:20px;"><p>Enter your M-Pesa number to pay Ksh ${ACTIVATION_FEE}.</p></div>
     <div class="mpesa-input"><input type="tel" id="activationPhone" placeholder="07XXXXXXXX" style="width:100%;padding:12px;"></div>
-    <button class="btn" id="payActivationBtn">Pay Ksh ${ACTIVATION_FEE}</button>
-    <button class="back-btn" id="cancelActivationBtn">Cancel</button>`;
+    <div class="modal-footer-sticky">
+      <button class="btn" id="payActivationBtn">Pay Ksh ${ACTIVATION_FEE}</button>
+      <button class="back-btn" id="cancelActivationBtn" style="margin-top:10px;">Cancel</button>
+    </div>`;
 
   const returnFn = () => showActivationFeeModal({ onSuccess });
-
   document.getElementById('cancelActivationBtn').addEventListener('click', () => closeModal('subscriptionModal'));
 
   document.getElementById('payActivationBtn').addEventListener('click', () => {
@@ -284,28 +296,33 @@ export function showActivationFeeModal({ onSuccess } = {}) {
 
 /* ============================== UPGRADE ============================== */
 export function showUpgradeModal({ offer, onSuccess } = {}) {
-  // offer = { fromPlan, toPlan, price }
   const container = document.getElementById('subscriptionContent');
   document.getElementById('subscriptionModalTitle').innerText = 'Upgrade Your Plan';
   container.innerHTML = `
     <div style="margin-bottom:20px;background:#e0f2fe;padding:12px;border-radius:12px;">
       <i class="fas fa-rocket"></i> You have reached your limit for ${offer.fromPlan} surveys.
     </div>
-    <div class="subscription-plan selected" style="border-color:#4f46e5;">
-      <div class="plan-header">
-        <span class="plan-name">${offer.toPlan}</span>
-        <span class="plan-price">Ksh ${offer.price} (Special Upgrade)</span>
+    <div class="sub-plan-row sub-plan-selected" style="cursor:default;">
+      <span class="sub-plan-badge badge-required">Special Upgrade</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span class="plan-row-name" style="font-weight:700;font-size:1rem;color:#1f2937;">${offer.toPlan}</span>
+        <span style="font-weight:700;color:#4f46e5;">Ksh ${offer.price}</span>
       </div>
-      <ul class="plan-features">
-        <li><i class="fas fa-check-circle"></i> Unlimited ${offer.toPlan === 'Standard Plus' ? 'standard' : 'premium'} surveys</li>
-        <li><i class="fas fa-check-circle"></i> All features of ${offer.fromPlan}</li>
+      <ul style="list-style:none;padding:0;margin:0;">
+        <li style="font-size:0.82rem;color:#4b5563;display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+          <i class="fas fa-check" style="color:#10b981;font-size:11px;width:14px;"></i>Unlimited ${offer.toPlan === 'Standard Plus' ? 'standard' : 'premium'} surveys
+        </li>
+        <li style="font-size:0.82rem;color:#4b5563;display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+          <i class="fas fa-check" style="color:#10b981;font-size:11px;width:14px;"></i>All features of ${offer.fromPlan}
+        </li>
       </ul>
     </div>
-    <button class="next-btn" id="upgradeNowBtn">Upgrade Now for Ksh ${offer.price}</button>
-    <button class="back-btn" id="cancelUpgradeBtn">Cancel</button>`;
+    <div class="modal-footer-sticky">
+      <button class="next-btn" id="upgradeNowBtn">Upgrade Now for Ksh ${offer.price}</button>
+      <button class="back-btn" id="cancelUpgradeBtn" style="margin-top:10px;">Cancel</button>
+    </div>`;
 
   document.getElementById('cancelUpgradeBtn').addEventListener('click', () => closeModal('subscriptionModal'));
-
   document.getElementById('upgradeNowBtn').addEventListener('click', () => showUpgradePaymentStep(offer, onSuccess));
   openModal('subscriptionModal');
 }
@@ -319,8 +336,10 @@ function showUpgradePaymentStep(offer, onSuccess) {
       <p>Enter your M-Pesa number to pay Ksh ${offer.price}.</p>
     </div>
     <div class="mpesa-input"><input type="tel" id="upgradePhone" placeholder="07XXXXXXXX" style="width:100%;padding:12px;"></div>
-    <button class="btn" id="confirmUpgrade">Pay Now</button>
-    <button class="back-btn" id="backUpgrade">← Back</button>`;
+    <div class="modal-footer-sticky">
+      <button class="btn" id="confirmUpgrade">Pay Now</button>
+      <button class="back-btn" id="backUpgrade" style="margin-top:10px;">← Back</button>
+    </div>`;
 
   const returnFn = () => showUpgradePaymentStep(offer, onSuccess);
   document.getElementById('backUpgrade').addEventListener('click', () => showUpgradeModal({ offer, onSuccess }));
