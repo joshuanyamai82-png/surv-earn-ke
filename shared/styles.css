@@ -270,6 +270,26 @@ body {
   background: #10b981;
 }
 
+/* ---------- Sticky context banner ("This survey requires…") ---------- */
+/* The wrap carries the white background + bottom gap so scrolled plan rows
+   are fully hidden behind it. The inner banner keeps the coloured card look. */
+.plan-context-banner-wrap {
+  position: sticky;
+  top: 64px;                 /* sits directly under .modal-header */
+  z-index: 9;                /* just below .modal-header (z-index: 10) */
+  background: #fff;
+  padding-bottom: 16px;      /* visual gap without margin bleed-through */
+  margin-bottom: 0;
+}
+.plan-context-banner {
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.plan-context-banner.standard { background: #fef3c7; }
+.plan-context-banner.premium  { background: #f1e5ff; }
+
 /* ---------- Sticky footer (Continue button) ---------- */
 .modal-footer-sticky {
   position: sticky;
